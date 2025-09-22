@@ -684,7 +684,7 @@
                             
                             <div>
                                 <label for="email" class="block text-gray-700 font-medium mb-2">Email Address</label>
-                                <input type="email" id="email" name="email" class="contact-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                                <input type="email" id="email" name="email" class="contact-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
                             </div>
                             
                             <div>
@@ -702,6 +702,7 @@
                                     <option value="Hair & Nail Treatments">Hair & Nail Treatments</option>
                                     <option value="Anti-Aging Treatments">Anti-Aging Treatments</option>
                                     <option value="Skin Cancer Screening">Skin Cancer Screening</option>
+                                    <option value="Other">Other</option>
                                 </select>
                             </div>
                             
@@ -964,7 +965,7 @@
             });
         });
 
-        // Form submission
+        // Form submission to Google Forms
         document.getElementById('contactForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -975,12 +976,78 @@
             const service = document.getElementById('service').value;
             const message = document.getElementById('message').value;
             
-            // Here you would typically send this data to your server
-            // For demo purposes, we'll just show an alert
-            alert(`Thank you, ${name}! Your message has been received. We'll contact you soon at ${email} or ${phone}.`);
+            // Google Form action URL (correct endpoint for form submission)
+            const googleFormURL = 'https://docs.google.com/forms/d/e/1FAIpQLSfPbgg4FuhRI_12W9ZSY5AJ7M0HfSEzIpfWdQZEwry3141vMQ/formResponse';
             
-            // Reset form
-            this.reset();
+            // Create form data for Google Forms
+            const formData = new FormData();
+            
+            // Add required hidden fields that Google Forms expects (updated values from latest form)
+            formData.append('fvv', '1');
+            formData.append('partialResponse', '[null,null,"7847598392519558444"]');
+            formData.append('pageHistory', '0');
+            formData.append('fbzx', '7847598392519558444');
+            formData.append('submissionTimestamp', Date.now().toString());
+            
+            // Map your form fields to Google Form entry IDs (from updated form)
+            formData.append('entry.2005620554', name);        // Full name field
+            formData.append('entry.1045781291', email);       // Email field  
+            formData.append('entry.1166974658', phone);       // Phone number field
+            formData.append('entry.839337160', service);      // Service interested field
+            formData.append('entry.1588194092', message);     // Message field (newly added)
+            
+            // Add sentinel fields for required fields
+            formData.append('entry.839337160_sentinel', '');
+            
+            // Show loading state
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = '<i data-feather="loader" class="mr-2 animate-spin" width="18" height="18"></i>Sending...';
+            submitButton.disabled = true;
+            
+            // Submit to Google Forms using fetch with no-cors mode
+            fetch(googleFormURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: formData
+            })
+            .then(() => {
+                // Success response (note: we can't read actual response due to no-cors)
+                submitButton.innerHTML = '<i data-feather="check" class="mr-2" width="18" height="18"></i>Message Sent!';
+                submitButton.classList.remove('btn-primary');
+                submitButton.classList.add('bg-green-500');
+                
+                // Show success message
+                alert(`Thank you, ${name}! Your message has been sent successfully. We'll contact you soon at ${phone}.`);
+                
+                // Reset form after delay
+                setTimeout(() => {
+                    document.getElementById('contactForm').reset();
+                    submitButton.innerHTML = originalText;
+                    submitButton.disabled = false;
+                    submitButton.classList.remove('bg-green-500');
+                    submitButton.classList.add('btn-primary');
+                    feather.replace(); // Re-render icons
+                }, 3000);
+            })
+            .catch((error) => {
+                // Error handling
+                console.error('Error:', error);
+                submitButton.innerHTML = '<i data-feather="x" class="mr-2" width="18" height="18"></i>Error - Try Again';
+                submitButton.classList.remove('btn-primary');
+                submitButton.classList.add('bg-red-500');
+                
+                alert('There was an error sending your message. Please try again or contact us directly.');
+                
+                // Reset button after delay
+                setTimeout(() => {
+                    submitButton.innerHTML = originalText;
+                    submitButton.disabled = false;
+                    submitButton.classList.remove('bg-red-500');
+                    submitButton.classList.add('btn-primary');
+                    feather.replace(); // Re-render icons
+                }, 3000);
+            });
         });
 
         // Replace Feather icons
